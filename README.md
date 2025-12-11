@@ -19,3 +19,4 @@ View your app in AI Studio: https://ai.studio/apps/drive/1Pz48rzBldVn3qjtBoy5Pur
 3. Run the app:
    `npm run dev`
 "# compecrit" 
+"# compecrit" 
