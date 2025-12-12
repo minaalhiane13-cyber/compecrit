@@ -1,7 +1,7 @@
 // netlify/functions/evaluate.js (VERSION FINALE AVEC CONTOURNEMENT D'ERREUR)
 
 // NOTE: Le require est déplacé À L'INTÉRIEUR du handler pour éviter le plantage à l'initialisation globale.
-const { QUESTIONS } = require("../../src/constants"); 
+const { QUESTIONS } = require("../../src/constants.js"); 
 
 exports.handler = async (event, context) => {
     // 1. Déplacer l'importation de GenAI à l'intérieur du handler

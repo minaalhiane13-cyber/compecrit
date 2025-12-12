@@ -1,7 +1,7 @@
 // netlify/functions/remediate.js (VERSION FINALE AVEC CONTOURNEMENT DE L'ERREUR)
 
 // Les constantes sont importées en dehors du handler
-const { QUESTIONS, STORY_TEXT } = require("../../src/constants"); 
+const { QUESTIONS, STORY_TEXT } = require("../../src/constants.js"); 
 
 exports.handler = async (event, context) => {
     // 1. Déplacer l'importation de GenAI à l'intérieur du handler
