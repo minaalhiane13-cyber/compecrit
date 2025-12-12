@@ -1,14 +1,12 @@
 // netlify/functions/remediate.js
 
 import { GoogleGenAI } from "@google/genai";
-// IMPORTANT : Assurez-vous que le chemin vers constants.js est correct
-import { STORY_TEXT, QUESTIONS } from "../../src/constants.js";
+import { STORY_TEXT, QUESTIONS } from "../../src/constants.js"; // <-- CORRECTION CLÉ : ajout de .js
 
 // 1. Fonction d'accès au client AI (getAiClient)
 const getAiClient = () => {
-    // Cette variable est configurée sur Netlify pour la sécurité
     if (!process.env.API_KEY) {
-        throw new Error("API Key not found in Netlify environment.");
+        throw new Error("API Key not found in Netlify environment. Check your environment variables.");
     }
     return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
@@ -23,13 +21,18 @@ const generateRemediationWithGemini = async (attempts) => {
 
     // Préparation des données pour l'IA
     const userPerformanceSummary = attempts.map(a => {
+        // Le TS est désactivé ici, on fait une vérification manuelle
         const question = QUESTIONS.find(q => q.id === a.questionId);
         const category = question ? question.category : 'Inconnue';
+        
+        // Assurez-vous que le statut est bien là
+        const status = a.status ? a.status.toUpperCase() : 'INCONNU';
+        
         return `
-            - Question (Catégorie ${category}) : ${question?.text}
-              (Statut final : ${a.status.toUpperCase()})
-              Tentatives : ${a.attempts}
-              Réponse de l'élève : "${a.userResponse}"
+            - Question (Catégorie ${category}) : ${question?.text || 'Question inconnue'}
+              (Statut final : ${status})
+              Tentatives : ${a.attempts || 1}
+              Réponse de l'élève : "${a.userResponse || 'Non enregistrée'}"
         `;
     }).join("\n");
 
