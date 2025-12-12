@@ -1,12 +1,10 @@
-// netlify/functions/remediate.js (VERSION FINALE ET STABLE)
-
-// RIEN n'est importé ici pour éviter les erreurs Top-level.
+// netlify/functions/remediate.js
 
 exports.handler = async (event, context) => {
-    // Importation paresseuse de CONSTANTES (résout le chemin)
-    const { QUESTIONS, STORY_TEXT } = require("../../src/constants.js"); 
+    // Importation paresseuse de CONSTANTES (CHEMIN CORRIGÉ)
+    const { QUESTIONS, STORY_TEXT } = require("./constants.js"); 
     
-    // Importation paresseuse de GENAI (résout le plantage 502)
+    // Importation paresseuse de GENAI (Résout le 502)
     const { GoogleGenAI } = require("@google/genai"); 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -14,8 +12,6 @@ exports.handler = async (event, context) => {
         return { statusCode: 405, body: JSON.stringify({ remediation: "Méthode non autorisée." }) };
     }
     
-    // ... (Le reste du code reste identique) ...
-
     let data;
     try {
         data = JSON.parse(event.body);
