@@ -1,13 +1,15 @@
-// netlify/functions/remediate.js (VERSION FINALE ET STABLE)
+// netlify/functions/remediate.js (VERSION IMPORT ESM)
 
-// Correction du chemin d'accès au fichier constantes (maintenant un .js)
-const { QUESTIONS, STORY_TEXT } = require("../../src/constants.js"); 
+// UTILISATION DE L'IMPORT ASYNCHRONE DE STYLE ESM/DYNAMIC
+const { QUESTIONS, STORY_TEXT } = await import("../../src/constants.js");
+const { GoogleGenAI } = await import("@google/genai"); 
 
-exports.handler = async (event, context) => {
-    // CORRECTION CRITIQUE : Déplacer l'importation de GenAI à l'intérieur du handler pour la stabilité
-    const { GoogleGenAI } = require("@google/genai"); 
+// Changement de la syntaxe d'export de CommonJS à ESM
+export const handler = async (event, context) => {
+
+    // Initialisation du client (fait ici pour un import dynamique/asynchrone)
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
+
     if (event.httpMethod !== 'POST' || !event.body) {
         return { statusCode: 405, body: JSON.stringify({ remediation: "Méthode non autorisée." }) };
     }
