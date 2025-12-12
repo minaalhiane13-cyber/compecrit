@@ -3,7 +3,7 @@
 // Imports nécessaires pour l'exécution côté serveur
 import { GoogleGenAI } from "@google/genai";
 // Ajustez le chemin pour accéder à STORY_TEXT (le chemin '..' signifie remonter d'un niveau)
-import { STORY_TEXT } from "../../src/constants"; 
+import { STORY_TEXT } from "../../src/constants.js"; 
 
 // 1. Fonction d'accès au client AI (maintenant sécurisée)
 const getAiClient = () => {

@@ -2,7 +2,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 // IMPORTANT : Assurez-vous que le chemin vers constants.js est correct
-import { STORY_TEXT, QUESTIONS } from "../../src/constants";
+import { STORY_TEXT, QUESTIONS } from "../../src/constants.js";
 
 // 1. Fonction d'accès au client AI (getAiClient)
 const getAiClient = () => {
