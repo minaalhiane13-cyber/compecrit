@@ -1,0 +1,14 @@
+# netlify.toml
+
+[build]
+  # Assure que Netlify trouve les fonctions
+  functions = "netlify/functions"
+  publish = "build" # Le dossier où votre application React est compilée
+
+[functions]
+  # Force l'utilisation d'une version de Node.js moderne (import/export)
+  node_bundler = "esbuild"
+  node_major_version = 20 # Utiliser une version récente et stable
+
+  # Si la fonction prend plus de 10 secondes (peu probable, mais au cas où)
+  # timeout = 30
