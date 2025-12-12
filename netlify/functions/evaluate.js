@@ -1,19 +1,21 @@
-// netlify/functions/evaluate.js (VERSION IMPORT ESM)
+// netlify/functions/evaluate.js (VERSION FINALE ET STABLE)
 
-// UTILISATION DE L'IMPORT ASYNCHRONE DE STYLE ESM/DYNAMIC
-const { QUESTIONS, STORY_TEXT } = await import("../../src/constants.js");
-const { GoogleGenAI } = await import("@google/genai"); 
+// RIEN n'est importé ici pour éviter les erreurs Top-level.
 
-// Changement de la syntaxe d'export de CommonJS à ESM
-export const handler = async (event, context) => {
+exports.handler = async (event, context) => {
+    // Importation paresseuse de CONSTANTES (résout le chemin)
+    const { QUESTIONS } = require("../../src/constants.js"); 
     
-    // Initialisation du client (fait ici pour un import dynamique/asynchrone)
+    // Importation paresseuse de GENAI (résout le plantage 502)
+    const { GoogleGenAI } = require("@google/genai"); 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     if (event.httpMethod !== 'POST' || !event.body) {
         return { statusCode: 405, body: JSON.stringify({ feedback: "Méthode non autorisée." }) };
     }
     
+    // ... (Le reste du code reste identique) ...
+
     let data;
     try {
         data = JSON.parse(event.body);
