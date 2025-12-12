@@ -1,12 +1,10 @@
 # netlify.toml
 
 [build]
-  # Dossier où votre application React est compilée
-  publish = "build" 
+  # CRITICAL FIX: Vite builds to 'dist', not 'build'
+  publish = "dist" 
   
 [functions]
-  # Chemin vers vos fonctions
   directory = "netlify/functions"
-  
-  # Configuration pour le bundling (C'EST LA CLÉ pour les imports ES6 et GenAI)
   node_bundler = "esbuild"
+  external_node_modules = ["@google/genai"]
