@@ -1,85 +1,52 @@
-import { GoogleGenAI, Modality } from "@google/genai";
-import { UserAttempt, Question, QuestionCategory } from "../types";
-import { STORY_TEXT } from "../constants";
+// src/services/geminiService.ts (NOUVELLE VERSION PROPRE ET SÉCURISÉE)
 
-// ATTENTION : getAiClient et evaluateAnswerWithGemini ont été déplacées
-// dans netlify/functions/evaluate.js pour la sécurité.
+// Ce fichier ne fait que des appels HTTP vers les fonctions serveur sécurisées.
 
-// Helper to get client (RÉINSÉRÉ pour les autres fonctions, mais moins sécurisé ici si c'est exécuté côté client !)
-// Vous devriez déplacer generateRemediation et generateTextToSpeech également !
-const getAiClient = () => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key not found");
-  }
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
-};
-
+// NOTE: Vous aurez besoin de la structure complète UserAttempt et Question
+// pour le typage des fonctions, assurez-vous que vous avez importé ces types
+// (Si vous en avez besoin, ajoutez ici : import { UserAttempt, Question } from "../types";)
 
 /**
- * Generates remediation lesson based on mistakes.
- * NOTE: Cette fonction utilise encore la clé API. Pour une sécurité totale, elle doit être déplacée
- * dans une autre Netlify Function (e.g., netlify/functions/remediate.js)
- */
-export const generateRemediation = async (attempts: UserAttempt[]): Promise<string> => {
-  const ai = getAiClient();
-// ... Le reste de votre fonction generateRemediation ...
-  const userPerformanceSummary = attempts.map(a => 
-    `Question ID ${a.questionId} (Statut: ${a.status}, Réponse élève: "${a.userResponse}")`
-  ).join("\n");
+ * Appel sécurisé à la Netlify Function pour générer le bilan de remédiation.
+ * @param attempts La liste des tentatives de l'utilisateur.
+ * @returns Le texte du bilan généré par l'IA.
+ */
+export const generateRemediation = async (attempts: any[]): Promise<string> => {
+    // Le chemin d'accès à la fonction serveur
+    const endpoint = '/.netlify/functions/remediate'; 
+    
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ attempts }),
+        });
 
-  const prompt = `
-    Tu t'adresses directement à l'élève...
-    ...
-  `;
+        if (!response.ok) {
+            let errorMsg = `Erreur serveur (HTTP ${response.status}).`;
+            try {
+                const errorBody = await response.json();
+                errorMsg = errorBody.remediation || errorMsg; // Tente de lire l'erreur renvoyée par le serveur (500)
+            } catch {}
+            throw new Error(errorMsg);
+        }
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
-    return response.text || "Impossible de générer le bilan.";
-  } catch (error) {
-    console.error(error);
-    return "Une erreur est survenue lors de la création du bilan.";
-  }
+        const result = await response.json();
+        return result.remediation || 'Bilan généré, mais le contenu est vide.';
+
+    } catch (error) {
+        console.error("Network or Fetch Error for Remediation:", error);
+        return "Échec de la connexion au serveur pour générer le bilan. Veuillez réessayer plus tard.";
+    }
 };
 
 /**
- * Generates Speech for the text using Gemini TTS
- * NOTE: Cette fonction utilise aussi la clé API et le modèle gemini-2.5-flash-preview-tts
- * qui n'est pas fait pour le client. Elle DOIT être déplacée dans une Netlify Function.
- */
+ * Gestionnaire pour la synthèse vocale.
+ * NOTE: Cette fonction devrait AUSSI être une Netlify Function pour la sécurité,
+ * mais comme vous n'avez pas créé de fonction tts.js, nous la laissons factice.
+ */
 export const generateTextToSpeech = async (text: string): Promise<ArrayBuffer | null> => {
-    const ai = getAiClient();
-    try {
-// ... Le reste de votre fonction generateTextToSpeech ...
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-preview-tts",
-            contents: { parts: [{ text: text }] },
-            config: {
-                responseModalities: [Modality.AUDIO],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: 'Fenrir' },
-                    },
-                },
-            },
-        });
-
-// ... Le reste de votre fonction generateTextToSpeech ...
-        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (!base64Audio) return null;
-
-        const binaryString = window.atob(base64Audio);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-        return bytes.buffer;
-
-    } catch (error) {
-        console.error("TTS Error", error);
-        return null;
-    }
-}
+    // Dans l'attente d'une fonction serveur sécurisée pour le TTS, on ne retourne rien pour ne pas planter.
+    console.warn("TTS désactivé : besoin d'une fonction serveur sécurisée (tts.js).");
+    return null;
+};
