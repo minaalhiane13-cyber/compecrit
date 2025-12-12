@@ -3,13 +3,10 @@
 [build]
   # Dossier où votre application React est compilée
   publish = "build" 
-
+  
 [functions]
   # Chemin vers vos fonctions
   directory = "netlify/functions"
   
-  # Configuration pour le bundling (permet d'utiliser les imports/exports)
+  # Configuration pour le bundling (C'EST LA CLÉ pour les imports ES6 et GenAI)
   node_bundler = "esbuild"
-  
-  # Timeout (optionnel, 30 secondes au lieu de 10)
-  timeout = 30
