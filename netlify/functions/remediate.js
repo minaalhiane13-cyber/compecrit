@@ -1,20 +1,17 @@
-// netlify/functions/remediate.js (VERSION FINALE AVEC CONTOURNEMENT DE L'ERREUR)
+// netlify/functions/remediate.js (VERSION FINALE ET STABLE)
 
-// Les constantes sont importées en dehors du handler
+// Correction du chemin d'accès au fichier constantes (maintenant un .js)
 const { QUESTIONS, STORY_TEXT } = require("../../src/constants.js"); 
 
 exports.handler = async (event, context) => {
-    // 1. Déplacer l'importation de GenAI à l'intérieur du handler
-    // C'EST LA CORRECTION CRITIQUE QUI DOIT RÉGLER LE PLANTE 502
+    // CORRECTION CRITIQUE : Déplacer l'importation de GenAI à l'intérieur du handler pour la stabilité
     const { GoogleGenAI } = require("@google/genai"); 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // 2. Vérification de la méthode et du corps
     if (event.httpMethod !== 'POST' || !event.body) {
         return { statusCode: 405, body: JSON.stringify({ remediation: "Méthode non autorisée." }) };
     }
     
-    // 3. Récupération des données (attempts)
     let data;
     try {
         data = JSON.parse(event.body);
@@ -24,7 +21,6 @@ exports.handler = async (event, context) => {
 
     const { attempts } = data;
     if (!attempts || attempts.length === 0) {
-        // Optionnel : renvoyer un bilan par défaut si aucune tentative n'est trouvée
         return { 
             statusCode: 200, 
             headers: { "Content-Type": "application/json" },
@@ -32,10 +28,8 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // 4. Préparation du prompt pour la remédiation
     const userPerformanceSummary = attempts.map(a => {
         const q = QUESTIONS.find(q => q.id === a.questionId);
-        // Si la question n'est pas trouvée (juste au cas où)
         if (!q) return ''; 
         return `Question [${q.category}]: "${q.text}". Statut final: ${a.status}. Réponse de l'élève: "${a.userResponse}". Tentatives: ${a.attempts}.`;
     }).join("\n");
@@ -57,7 +51,6 @@ exports.handler = async (event, context) => {
         Ne dépasse pas 300 mots au total.
     `;
 
-    // 5. Appel à Gemini
     try {
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -72,7 +65,6 @@ exports.handler = async (event, context) => {
 
     } catch (error) {
         console.error("Erreur Gemini lors de la remédiation:", error);
-        // Le 500 ici est plus informatif que le 502 de Netlify
         return {
             statusCode: 500,
             body: JSON.stringify({ remediation: `Erreur serveur lors de la génération du bilan. Le problème persiste : la librairie Gemini cause un plantage. (${error.message || 'Erreur inconnue'})` })

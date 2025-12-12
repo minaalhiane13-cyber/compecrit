@@ -1,16 +1,13 @@
-// netlify/functions/evaluate.js (VERSION FINALE AVEC CONTOURNEMENT D'ERREUR)
+// netlify/functions/evaluate.js (VERSION FINALE ET STABLE)
 
-// NOTE: Le require est déplacé À L'INTÉRIEUR du handler pour éviter le plantage à l'initialisation globale.
+// Correction du chemin d'accès au fichier constantes (maintenant un .js)
 const { QUESTIONS } = require("../../src/constants.js"); 
 
 exports.handler = async (event, context) => {
-    // 1. Déplacer l'importation de GenAI à l'intérieur du handler
+    // CORRECTION CRITIQUE : Déplacer l'importation de GenAI à l'intérieur du handler pour la stabilité
     const { GoogleGenAI } = require("@google/genai"); 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // ... (Reste de votre code de vérification, puis du prompt) ...
-
-    // Reste de la logique de vérification (méthode, JSON.parse, etc.)
     if (event.httpMethod !== 'POST' || !event.body) {
         return { statusCode: 405, body: JSON.stringify({ feedback: "Méthode non autorisée." }) };
     }
@@ -24,11 +21,26 @@ exports.handler = async (event, context) => {
 
     const { question, userAnswer } = data;
 
-    // ... (Code du prompt et de l'appel GenAI, tel que dans votre version précédente) ...
+    if (!question || !userAnswer) {
+        return { statusCode: 400, body: JSON.stringify({ feedback: "Données requises manquantes (question ou userAnswer)." }) };
+    }
 
     const prompt = `
-        Tu es un correcteur expert en compréhension de l'écrit... [Utilisez le prompt complet que vous aviez]
-        ...
+        Tu es un correcteur expert en compréhension de l'écrit pour des élèves de 5ème année primaire. 
+        Ton rôle est d'évaluer la réponse de l'élève à la question suivante, en utilisant le texte comme référence si nécessaire. 
+        
+        Question: "${question.text}"
+        Réponse attendue/correcte: "${question.correctAnswer}"
+        Réponse de l'élève: "${userAnswer}"
+        
+        Analyse la réponse de l'élève. Réponds uniquement avec un objet JSON strict au format suivant :
+        {
+            "status": "correct" | "partial" | "wrong",
+            "feedback": "Un court message de motivation/correction à l'élève, maximum 10 mots."
+        }
+        
+        Considère 'partial' si la réponse de l'élève contient l'idée principale mais manque de détails cruciaux.
+        Considère 'correct' si l'idée principale est là, même si la formulation est différente.
     `;
 
     try {
@@ -50,13 +62,12 @@ exports.handler = async (event, context) => {
         };
 
     } catch (error) {
-        // Cette erreur devrait maintenant être une erreur d'API (clé) et non une erreur d'initialisation
         console.error("Erreur Gemini lors de l'évaluation:", error);
         return {
             statusCode: 500,
             body: JSON.stringify({ 
                 status: 'wrong',
-                feedback: `Erreur critique du serveur d'analyse. La clé API est-elle valide? (${error.message || '500'})` 
+                feedback: `Erreur serveur d'analyse. (${error.message || 'Clé API?'} - 500)` 
             })
         };
     }
