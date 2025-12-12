@@ -1,10 +1,10 @@
 // netlify/functions/evaluate.js
 
 exports.handler = async (event, context) => {
-    // Importation paresseuse de CONSTANTES (CHEMIN CORRIGÉ)
+    // 1. Importation paresseuse de CONSTANTES (CHEMIN FINAL CORRIGÉ)
     const { QUESTIONS } = require("./constants.js"); 
     
-    // Importation paresseuse de GENAI (Résout le 502)
+    // 2. Importation paresseuse de GENAI (Résout le plantage 502)
     const { GoogleGenAI } = require("@google/genai"); 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
@@ -26,7 +26,7 @@ exports.handler = async (event, context) => {
     }
 
     const prompt = `
-        Tu es un correcteur expert en compréhension de l'écrit pour des élèves de 5ème année primaire. 
+        Tu es un correcteur français expert en compréhension de l'écrit pour des élèves de 5ème année primaire. 
         Ton rôle est d'évaluer la réponse de l'élève à la question suivante, en utilisant le texte comme référence si nécessaire. 
         
         Question: "${question.text}"
@@ -36,11 +36,13 @@ exports.handler = async (event, context) => {
         Analyse la réponse de l'élève. Réponds uniquement avec un objet JSON strict au format suivant :
         {
             "status": "correct" | "partial" | "wrong",
-            "feedback": "Un court message de motivation/correction à l'élève, maximum 10 mots."
+            "feedback": "Un court message de motivation/correction à l'élève, maximum 15 mots. Le message DOIT changer en fonction de l'erreur ou de la précision de la réponse donnée par l'élève."
         }
         
-        Considère 'partial' si la réponse de l'élève contient l'idée principale mais manque de détails cruciaux.
-        Considère 'correct' si l'idée principale est là, même si la formulation est différente.
+        Règles d'évaluation:
+        - Utilise 'correct' si l'idée principale est présente.
+        - Utilise 'partial' si la réponse est incomplète ou imprécise. Dans ce cas, le feedback doit indiquer ce qui manque.
+        - Utilise 'wrong' si la réponse est fausse ou hors sujet.
     `;
 
     try {
